@@ -1,4 +1,4 @@
-// import PropTypes from 'prop-types';
+import PropTypes from 'prop-types';
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import './Modal.css';
@@ -19,13 +19,6 @@ function Modal({ onClose, bigImg, tags }) {
     };
   }, [onClose]);
 
-  // componentDidMount() {
-  //   window.addEventListener('keydown', this.handleKeyDown);
-  // }
-  // componentWillUnmount() {
-  //   window.removeEventListener('keydown', this.handleKeyDown);
-  // }
-
   function handleBackdropClick(e) {
     if (e.target === e.currentTarget) {
       onClose();
@@ -41,5 +34,11 @@ function Modal({ onClose, bigImg, tags }) {
     modalRoot,
   );
 }
+
+Modal.propTypes = {
+  onClose: PropTypes.func,
+  bigImg: PropTypes.string,
+  tags: PropTypes.string,
+};
 
 export default Modal;

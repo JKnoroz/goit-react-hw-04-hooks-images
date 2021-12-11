@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { ToastContainer } from 'react-toastify';
 import { toast } from 'react-toastify';
 import { animateScroll as scroll } from 'react-scroll';
@@ -13,92 +13,100 @@ import ImageGallery from './components/ImageGallery/ImageGallery';
 import Button from './components/Button/Button';
 import Modal from './components/Modal/Modal';
 
-class App extends Component {
-  state = {
-    searchRequest: '',
-    images: [],
-    error: null,
-    status: 'idle',
-    page: 1,
-    showModal: false,
-    bigImg: '',
-    tags: '',
-  };
+function App() {
+  const [searchRequest, setSearchRequest] = useState('');
+  const [images, setImages] = useState([]);
+  const [error, setError] = useState(null);
+  const [status, setStatus] = useState('idle');
+  const [page, setPage] = useState(1);
+  const [showModal, setShowModal] = useState(false);
+  const [bigImg, setBigImg] = useState('');
+  const [tags, setTags] = useState('');
 
-  componentDidUpdate(prevProps, prevState) {
-    const { page, searchRequest } = this.state;
-
-    if (searchRequest !== prevState.searchRequest || page > prevState.page) {
-      if (page === 1) {
-        this.setState({ images: [], status: 'pending' });
-      }
-      imagesAPI
-        .fetchImages(searchRequest, page)
-        .then(({ hits }) => {
-          if (hits.length === 0) {
-            toast.info('No images found');
-          }
-          this.setState(
-            prevState => ({
-              status: 'resolved',
-              images: [...prevState.images, ...hits],
-            }),
-            () => scroll.scrollToBottom(),
-          );
-        })
-        .catch(error => this.setState({ error, status: 'rejected' }));
+  useEffect(() => {
+    if (!searchRequest) {
+      return;
     }
+    setStatus('pending');
+    imagesAPI
+      .fetchImages(searchRequest, page)
+      .then(({ hits }) => {
+        if (hits.length === 0) {
+          toast.info('No images found');
+        }
+        setStatus('resolved');
+        setImages(prev => [...prev, ...hits]);
+
+        scroll.scrollToBottom();
+      })
+      .catch(error => {
+        setError(error);
+        setStatus('rejected');
+      });
+  }, [images, page, searchRequest]);
+
+  function handleFormSubmit(query) {
+    if (query === searchRequest) {
+      alert('already loaded');
+      return;
+    }
+    setSearchRequest(query);
+    setPage(1);
+    setImages([]);
+    setError(null);
   }
 
-  handleFormSubmit = searchRequest => {
-    this.setState({ searchRequest, page: 1 });
-  };
+  function handleLoadMore() {
+    setPage(page => page + 1);
+    setStatus('pending');
 
-  handleLoadMore = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-      status: 'pending',
-    }));
-  };
-
-  toggleModal = () => {
-    this.setState(({ showModal }) => ({
-      showModal: !showModal,
-    }));
-  };
-
-  handleImgClick = (bigImg, tags) => {
-    this.setState({ bigImg, tags });
-    this.toggleModal();
-  };
-
-  render() {
-    const { images, error, status, showModal, bigImg, tags } = this.state;
-
-    return (
-      <div className="App">
-        <SearchBar onSubmit={this.handleFormSubmit} />
-
-        {status === 'idle' && null}
-
-        {(status === 'resolved' || status === 'pending') && (
-          <ImageGallery images={images} showBigImg={this.handleImgClick} />
-        )}
-
-        {status === 'pending' && <LoaderSpinner />}
-
-        {status === 'resolved' && images.length >= 12 && (
-          <Button onLoadMore={this.handleLoadMore} />
-        )}
-
-        {status === 'rejected' && <div>{error}</div>}
-        {showModal && (
-          <Modal onClose={this.toggleModal} bigImg={bigImg} tags={tags}></Modal>
-        )}
-        <ToastContainer autoClose={3000} />
-      </div>
-    );
+    // this.setState(prevState => ({
+    //   page: prevState.page + 1,
+    //   status: 'pending',
+    // }));
   }
+
+  function toggleModal(showModal) {
+    setShowModal(!showModal);
+
+    // this.setState(({ showModal }) => ({
+    //   showModal: !showModal,
+    // }));
+  }
+
+  function handleImgClick(bigImg, tags) {
+    setBigImg(bigImg);
+    setTags(tags);
+
+    // this.setState({ bigImg, tags });
+    toggleModal();
+  }
+
+  // const { images, error, status, showModal, bigImg, tags } = this.state;
+
+  return (
+    <div className="App">
+      <SearchBar onSubmit={handleFormSubmit} />
+
+      {status === 'idle' && null}
+
+      {(status === 'resolved' || status === 'pending') && (
+        <ImageGallery images={images} showBigImg={handleImgClick} />
+      )}
+
+      {status === 'pending' && <LoaderSpinner />}
+
+      {status === 'resolved' && images.length >= 12 && (
+        <Button onLoadMore={handleLoadMore} />
+      )}
+
+      {status === 'rejected' && <div>{error}</div>}
+      {showModal && (
+        <Modal onClose={toggleModal} bigImg={bigImg} tags={tags}></Modal>
+      )}
+      <ToastContainer autoClose={3000} />
+    </div>
+  );
 }
 
 export default App;

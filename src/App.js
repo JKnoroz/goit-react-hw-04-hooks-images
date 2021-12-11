@@ -43,7 +43,7 @@ function App() {
         setError(error);
         setStatus('rejected');
       });
-  }, [images, page, searchRequest]);
+  }, [page, searchRequest]);
 
   function handleFormSubmit(query) {
     if (query === searchRequest) {
@@ -59,22 +59,14 @@ function App() {
   function handleLoadMore() {
     setPage(page => page + 1);
     setStatus('pending');
-
-    // this.setState(prevState => ({
-    //   page: prevState.page + 1,
-    //   status: 'pending',
-    // }));
   }
 
-  function toggleModal(showModal) {
+  function toggleModal() {
     setShowModal(!showModal);
-
-    // this.setState(({ showModal }) => ({
-    //   showModal: !showModal,
-    // }));
   }
 
   function handleImgClick(bigImg, tags) {
+    setShowModal(true);
     setBigImg(bigImg);
     setTags(tags);
 
